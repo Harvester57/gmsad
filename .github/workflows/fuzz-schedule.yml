@@ -42,7 +42,7 @@ jobs:
           python -m pip install -e .[dev,fuzz]
 
       - name: Restore fuzz corpus cache
-        uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
+        uses: actions/cache/restore@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
         with:
           path: ${{ matrix.path }}
           # Unique key for each run, so cache is always saved at the end
@@ -55,3 +55,11 @@ jobs:
         run: |
           mkdir -p ${{ matrix.path }}
           ${{ matrix.command }}
+
+      - name: Save fuzz corpus cache
+        if: always()
+        uses: actions/cache/save@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
+        with:
+          path: ${{ matrix.path }}
+          key: fuzz-corpus-${{ matrix.target }}-${{ runner.os }}-${{ github.run_id }}
+
