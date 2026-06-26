@@ -37,31 +37,27 @@ class TestGMSA(unittest.TestCase):
 
     def test_managedpassword_too_short(self):
         blob = bytes([0]*31)
-        with self.assertLogs(level="ERROR"):
-            with self.assertRaises(ValueError):
-                self.gmsa_state.parse_managedpassword_blob(blob)
+        with self.assertLogs(level="ERROR"), self.assertRaises(ValueError):
+            self.gmsa_state.parse_managedpassword_blob(blob)
 
     def test_managedpassword_invalid_version(self):
         blob = bytearray(SAMPLE_BLOB)
         version = 2
         blob[0], blob[1] = struct.pack('<H', version)
 
-        with self.assertLogs(level="ERROR"):
-            with self.assertRaises(ValueError):
-                self.gmsa_state.parse_managedpassword_blob(blob)
+        with self.assertLogs(level="ERROR"), self.assertRaises(ValueError):
+            self.gmsa_state.parse_managedpassword_blob(blob)
 
     def test_managed_password_invalid_length(self):
         blob = SAMPLE_BLOB[:-1]
 
-        with self.assertLogs(level="ERROR"):
-            with self.assertRaises(ValueError):
-                self.gmsa_state.parse_managedpassword_blob(blob)
+        with self.assertLogs(level="ERROR"), self.assertRaises(ValueError):
+            self.gmsa_state.parse_managedpassword_blob(blob)
 
         blob = SAMPLE_BLOB + b'0'
 
-        with self.assertLogs(level="ERROR"):
-            with self.assertRaises(ValueError):
-                self.gmsa_state.parse_managedpassword_blob(blob)
+        with self.assertLogs(level="ERROR"), self.assertRaises(ValueError):
+            self.gmsa_state.parse_managedpassword_blob(blob)
 
     def test_managed_password_only_current(self):
         self.gmsa_state.parse_managedpassword_blob(SAMPLE_BLOB)

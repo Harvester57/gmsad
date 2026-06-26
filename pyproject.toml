@@ -29,6 +29,12 @@ dependencies = [
 dev = [
     "mypy",
     "ruff",
+    "pytest",
+    "pytest-cov",
+    "hypothesis",
+]
+fuzz = [
+    "atheris",
 ]
 
 [project.scripts]
@@ -50,7 +56,11 @@ module = [
     "ldap3.*",
     "asn1crypto.*",
     "gssapi.*",
-    "Cryptodome.*"
+    "Cryptodome.*",
+    "atheris.*",
+    "atheris",
+    "hypothesis.*",
+    "hypothesis"
 ]
 ignore_missing_imports = true
 
@@ -71,5 +81,18 @@ select = [
     "I",   # isort
     "B",   # flake8-bugbear
     "UP",  # pyupgrade (upgrades syntax to modern Python)
+    "S",   # flake8-bandit (security checks)
+    "A",   # flake8-builtins
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "PTH", # flake8-use-pathlib
 ]
 ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore the new strict rules on legacy/preexisting files
+"gmsad/*" = ["S", "A", "C4", "SIM", "PTH"]
+"scripts/*" = ["S", "A", "C4", "SIM", "PTH"]
+"tests/test_gmsa.py" = ["S", "A", "C4", "SIM", "PTH"]
+"tests/test_keytab.py" = ["S", "A", "C4", "SIM", "PTH"]
+"tests/test_enctypes.py" = ["S", "A", "C4", "SIM", "PTH"]

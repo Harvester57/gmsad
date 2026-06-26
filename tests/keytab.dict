@@ -1,0 +1,30 @@
+# Fuzzing dictionary for Kerberos Keytab file format version 0x502
+
+# Magic bytes (0x0502 big-endian)
+magic="\x05\x02"
+
+# Common principal separators
+at="@"
+slash="/"
+
+# Common principal names / components
+comp_host="host"
+comp_http="http"
+comp_admin="admin"
+comp_krbtgt="krbtgt"
+comp_realm="REALM"
+comp_local="LOCAL"
+
+# Big-endian integers (16-bit and 32-bit)
+int16_zero="\x00\x00"
+int16_one="\x00\x01"
+int32_zero="\x00\x00\x00\x00"
+int32_one="\x00\x00\x00\x01"
+int32_negone="\xff\xff\xff\xff"
+int32_negative="\x80\x00\x00\x00"
+
+# Common encryption type IDs (big-endian 16-bit)
+# e.g. 17 (AES128), 18 (AES256)
+enctype_aes128="\x00\x11"
+enctype_aes256="\x00\x12"
+enctype_rc4="\x00\x17"

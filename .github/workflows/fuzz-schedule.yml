@@ -1,0 +1,49 @@
+name: Nightly Fuzzing
+
+on:
+  schedule:
+    # Run nightly at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Allow manual triggering
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.14'
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends krb5-config libkrb5-dev
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[dev,fuzz]
+
+      - name: Restore fuzz corpus cache
+        uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
+        with:
+          path: tests/corpus
+          # Unique key for each run, so cache is always saved at the end
+          key: fuzz-corpus-${{ runner.os }}-${{ github.run_id }}
+          # Fallback to the most recent cache from a previous run
+          restore-keys: |
+            fuzz-corpus-${{ runner.os }}-
+
+      - name: Run fuzzing session
+        run: |
+          mkdir -p tests/corpus
+          # Run the fuzzer for up to 500,000 iterations to discover deep issues
+          python tests/fuzz_keytab.py -runs=500000 -dict=tests/keytab.dict tests/corpus
