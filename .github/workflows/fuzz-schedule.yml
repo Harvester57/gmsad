@@ -15,10 +15,11 @@ jobs:
         include:
           - target: keytab
             path: tests/corpus
-            command: python tests/fuzz_keytab.py -max_total_time=600 -dict=tests/keytab.dict tests/corpus
+            command: python tests/fuzz_keytab.py -max_total_time=600 -max_len=512 -dict=tests/keytab.dict tests/corpus
           - target: gmsa
             path: tests/corpus_gmsa
-            command: python tests/fuzz_gmsa.py -max_total_time=600 -dict=tests/gmsa.dict tests/corpus_gmsa
+            command: python tests/fuzz_gmsa.py -max_total_time=600 -max_len=2048 -dict=tests/gmsa.dict tests/corpus_gmsa
+
 
 
     steps:
