@@ -295,7 +295,8 @@ class Keytab:
                 # According to the Shishi documentation, -e.size is the offset
                 # to the next keytab_entry.
                 # TODO: Try to find test materials
-                fd.seek(-e.size)
+                fd.seek(-e.size, io.SEEK_CUR)
+                continue
             except EndOfKeytabEntries:
                 break
             self.entries.append(entry)
