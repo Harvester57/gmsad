@@ -244,7 +244,7 @@ class KeytabEntry:
     def principal(self, princ: str) -> None:
         if '@' not in princ:
             raise InvalidPrincipal()
-        princ, self.realm = princ.split('@')
+        princ, self.realm = princ.rsplit('@', 1)
         self.components = princ.split('/')
 
 class Keytab:
