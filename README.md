@@ -15,6 +15,7 @@ In addition, `gmsad` requires a working LDAPS interface on domain controllers wi
 # Documentation
 
 - [Getting started with gmsad](doc/getting_started.md)
+- [Running gmsad in Docker](doc/docker.md)
 - [Why was this tool created ?](doc/genesis.md)
 - [How does a gMSA work ?](doc/gmsa.md)
 - [Talk at SSTIC 2023 (in french)](https://www.sstic.org/2023/presentation/gmsad/)

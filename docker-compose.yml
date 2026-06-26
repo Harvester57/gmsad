@@ -1,0 +1,37 @@
+services:
+  gmsad:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gmsad
+    restart: unless-stopped
+    volumes:
+      # Mount the configuration file
+      - ./gmsad.conf:/etc/gmsad/gmsad.conf:ro
+      # Mount Kerberos configuration to resolve domain controller realm
+      - /etc/krb5.conf:/etc/krb5.conf:ro
+      # Mount the machine/server account keytab used for AD authentication
+      - /etc/krb5.keytab:/etc/krb5.keytab:ro
+      # Shared volume where gmsad writes the retrieved gMSA keytab
+      - shared_keytabs:/var/lib/gmsad:rw
+
+  # Example application service consuming the generated keytab.
+  # Replace or modify this with your actual application container (e.g. Apache/Nginx).
+  app:
+    image: alpine:latest
+    container_name: gmsa_app
+    depends_on:
+      - gmsad
+    volumes:
+      # Mount the shared volume to access the generated gMSA service keytab (read-only)
+      - shared_keytabs:/etc/keytabs:ro
+    # Example command that waits for the keytab to be created and lists it
+    command: >
+      sh -c "echo 'Waiting for keytab...';
+             while [ ! -f /etc/keytabs/semoule.keytab ]; do sleep 1; done;
+             echo 'Keytab found!';
+             ls -la /etc/keytabs/;
+             tail -f /dev/null"
+
+volumes:
+  shared_keytabs:
