@@ -18,7 +18,8 @@ jobs:
             command: python tests/fuzz_keytab.py -max_total_time=600 -dict=tests/keytab.dict tests/corpus
           - target: gmsa
             path: tests/corpus_gmsa
-            command: python tests/fuzz_gmsa.py -max_total_time=600 tests/corpus_gmsa
+            command: python tests/fuzz_gmsa.py -max_total_time=600 -dict=tests/gmsa.dict tests/corpus_gmsa
+
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0

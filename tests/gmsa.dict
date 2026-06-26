@@ -1,0 +1,14 @@
+# Fuzzing dictionary for Active Directory msDS-ManagedPassword structure (GMSA)
+
+# Version header (0x0001 little-endian)
+version_01_00="\x01\x00"
+
+# Reserved field / padding
+reserved_zero="\x00\x00\x00\x00"
+
+# Fuzzer recommended tokens
+rec_8d_00_00_00_00_00_00_00="\x8d\x00\x00\x00\x00\x00\x00\x00"
+rec_00_00_00_00_00_00_00_52="\x00\x00\x00\x00\x00\x00\x00\x52"
+rec_01_00_00_00_00_00_00_00="\x01\x00\x00\x00\x00\x00\x00\x00"
+rec_ff_01_00_00_00_00_00_00="\xff\x01\x00\x00\x00\x00\x00\x00"
+rec_67_00_00_00_00_00_00_00="\x67\x00\x00\x00\x00\x00\x00\x00"

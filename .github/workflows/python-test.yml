@@ -53,4 +53,5 @@ jobs:
         run: |
           mkdir -p tests/corpus tests/corpus_gmsa
           python tests/fuzz_keytab.py -runs=5000 -dict=tests/keytab.dict tests/corpus
-          python tests/fuzz_gmsa.py -runs=5000 tests/corpus_gmsa
+          python tests/fuzz_gmsa.py -runs=5000 -dict=tests/gmsa.dict tests/corpus_gmsa
+
