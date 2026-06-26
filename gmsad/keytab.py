@@ -2,7 +2,7 @@ import io
 import logging
 import struct
 import time
-from typing import Any, BinaryIO
+from typing import Any, BinaryIO, Self
 
 from gmsad.enctypes import ENCTYPES, MS_ENCTYPES_TO_RFC
 
@@ -89,8 +89,8 @@ class Keyblock:
         self.type = type
         self.key = key
 
-    @staticmethod
-    def from_stream(fd: BinaryIO) -> tuple['Keyblock', int]:
+    @classmethod
+    def from_stream(cls, fd: BinaryIO) -> tuple[Self, int]:
         """
         Unserialize a Keyblock from the stream <fd>
         :return:the number of bytes read
@@ -100,7 +100,7 @@ class Keyblock:
         # TODO: validate type
 
         key, offset = unpack_counted_octet_string(fd, offset)
-        return (Keyblock(_type, key), offset)
+        return (cls(_type, key), offset)
 
     def to_stream(self, fd: BinaryIO) -> int:
         """
@@ -131,8 +131,8 @@ class KeytabEntry:
         self.vno = kvno
         self.key = key
 
-    @staticmethod
-    def from_stream(fd: BinaryIO) -> tuple['KeytabEntry', int]:
+    @classmethod
+    def from_stream(cls, fd: BinaryIO) -> tuple[Self, int]:
         """
         Unserialize keytab entry from fd and populates
         the current class instance with values stored in keytab.
@@ -184,7 +184,7 @@ class KeytabEntry:
             fd.read(size - offset)
 
         princ = f"{'/'.join(components)}@{realm}"
-        entry = KeytabEntry(princ, vno, timestamp, key)
+        entry = cls(princ, vno, timestamp, key)
 
         # Total read size is the size of the "size" field (!i) added to its value
         return (entry, struct.calcsize('!i') + size)

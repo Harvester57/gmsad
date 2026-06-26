@@ -4,7 +4,7 @@ import shlex
 import struct
 import subprocess
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from gmsad.keytab import Keytab
 from gmsad.ldap import LDAPConnection
@@ -25,8 +25,8 @@ class GMSAState:
         self.current_password = b""
         self.previous_password = b""
         self.keytab = keytab
-        self.query_password_date = datetime(1970, 1, 1, tzinfo=timezone.utc).astimezone()
-        self.unchanged_password_date = datetime(1970, 1, 1, tzinfo=timezone.utc).astimezone()
+        self.query_password_date = datetime(1970, 1, 1, tzinfo=UTC).astimezone()
+        self.unchanged_password_date = datetime(1970, 1, 1, tzinfo=UTC).astimezone()
 
     def needs_spn_update(self) -> bool:
         """
