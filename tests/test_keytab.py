@@ -1,8 +1,9 @@
-import unittest
-import time
+import os
 import tempfile
+import time
+import unittest
 
-from gmsad.keytab import Keytab, InvalidPrincipal
+from gmsad.keytab import InvalidPrincipal, Keytab
 
 FEEDS = [
     {
@@ -11,7 +12,7 @@ FEEDS = [
         "components": ["user"],
         "salt": "REALMuser.realm",
         "kvno": 1,
-        "password": "toto".encode('utf-8'),
+        "password": b"toto",
         "enctypes": 0x18 # Will result in 2 entries with enctypes 17 and 18
     },
     {
@@ -20,7 +21,7 @@ FEEDS = [
         "components": ["tutu"],
         "salt": "REALMtutu.realm",
         "kvno": 512,
-        "password": "tutu".encode('utf-8'),
+        "password": b"tutu",
         "enctypes": 0x10 # One entry with enctype 18
     },
     {
@@ -29,7 +30,7 @@ FEEDS = [
         "components": ["http", "tutu"],
         "salt": "REALMhttptutu.realm",
         "kvno": 10,
-        "password": "httptutu".encode('utf-8'),
+        "password": b"httptutu",
         "enctypes": 0x8 # One entry with enctype 17
     },
 ]
@@ -37,7 +38,11 @@ FEEDS = [
 class TestKeytab(unittest.TestCase):
 
     def setUp(self):
-        self.tmpfile = tempfile.NamedTemporaryFile()
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.tmpfile_name = os.path.join(self.tmpdir.name, "keytab")
+
+    def tearDown(self):
+        self.tmpdir.cleanup()
 
     # Test helpers
 
@@ -79,7 +84,7 @@ class TestKeytab(unittest.TestCase):
        keytab = Keytab()
        self.assertFalse(keytab.have_content())
 
-       keytab.open(self.tmpfile.name)
+       keytab.open(self.tmpfile_name)
        self.assertFalse(keytab.have_content())
 
     def test_keytab_creation(self):
@@ -101,17 +106,17 @@ class TestKeytab(unittest.TestCase):
     def test_write_read_keytab(self):
         keytab = Keytab()
         self.populate_keytab(keytab)
-        keytab.write(self.tmpfile.name)
+        keytab.write(self.tmpfile_name)
 
         # Check file existence
-        with open(self.tmpfile.name, 'r+b'):
+        with open(self.tmpfile_name, 'r+b'):
             pass
 
         new_keytab = Keytab()
-        new_keytab.open(self.tmpfile.name)
+        new_keytab.open(self.tmpfile_name)
         self.check_feed_keytab(new_keytab)
 
     def test_bad_princ(self):
         keytab = Keytab()
         with self.assertRaises(InvalidPrincipal):
-            keytab.add_entry("toto", "salt", "1", "toto".encode('utf-8'), 0x8)
+            keytab.add_entry("toto", "salt", 1, b"toto", 0x8)

@@ -1,7 +1,10 @@
 import logging
 import time
-from typing import Callable, Any
+from collections.abc import Callable
+from typing import Any
+
 import dns.resolver
+
 
 def every(delay: int, task: Callable, *args: Any, **kwargs: Any) -> None:
     """

@@ -1,16 +1,15 @@
 import configparser
 import logging
-import struct
-import time
-from datetime import datetime
-import subprocess
 import shlex
-from typing import Optional, Tuple
+import struct
+import subprocess
+import time
+from datetime import datetime, timezone
 
-from gmsad.ldap import LDAPConnection
 from gmsad.keytab import Keytab
+from gmsad.ldap import LDAPConnection
+from gmsad.salt import get_salt_from_heuristic, get_salt_from_preauth
 from gmsad.utils import get_dc
-from gmsad.salt import get_salt_from_preauth, get_salt_from_heuristic
 
 
 class GMSAState:
@@ -23,11 +22,11 @@ class GMSAState:
 
     def __init__(self, config: configparser.SectionProxy, keytab: Keytab) -> None:
         self.config = config
-        self.current_password = bytes()
-        self.previous_password = bytes()
+        self.current_password = b""
+        self.previous_password = b""
         self.keytab = keytab
-        self.query_password_date = datetime.fromtimestamp(0).astimezone()
-        self.unchanged_password_date = datetime.fromtimestamp(0).astimezone()
+        self.query_password_date = datetime(1970, 1, 1, tzinfo=timezone.utc).astimezone()
+        self.unchanged_password_date = datetime(1970, 1, 1, tzinfo=timezone.utc).astimezone()
 
     def needs_spn_update(self) -> bool:
         """
@@ -45,7 +44,7 @@ class GMSAState:
 
         :return True if an update is needed, False otherwise
         """
-        if not "gMSA_servicePrincipalNames" in self.config:
+        if "gMSA_servicePrincipalNames" not in self.config:
             # No SPN configured
             return False
 
@@ -138,7 +137,7 @@ class GMSAState:
             self.update_spn(kvno, enctypes)
 
 
-    def query_new_password(self) -> Tuple[int, int]:
+    def query_new_password(self) -> tuple[int, int]:
         """
         Retrieve and parse MSDS-MANAGEDPASSWORD_BLOB struct
 
@@ -164,9 +163,9 @@ class GMSAState:
 
         if len(attributes['msDS-ManagedPassword'].raw_values) == 0:
             raise ValueError(
-                    "Could not retrieve msDS-ManagedPassword attribute of gMSA account %s in LDAP." \
-                    " Does your account have sufficient permissions ?"
-                    % self.config["gMSA_sAMAccountName"])
+                f"Could not retrieve msDS-ManagedPassword attribute of gMSA account {self.config['gMSA_sAMAccountName']} in LDAP. "
+                "Does your account have sufficient permissions?"
+            )
 
         password_blob = attributes['msDS-ManagedPassword'].raw_values[0]
         self.parse_managedpassword_blob(password_blob)
@@ -187,8 +186,10 @@ class GMSAState:
         # Retrieve new kvno
         # It must be done in a different LDAP query because the first
         # one may update the kvno (at least that what we experienced)
-        kvno = ldap.get_gmsa_attributes(["msDS-KeyVersionNumber"])\
-                ["msDS-KeyVersionNumber"].value
+        kvno = (
+            ldap.get_gmsa_attributes(["msDS-KeyVersionNumber"])
+            ["msDS-KeyVersionNumber"].value
+        )
 
         ldap.close()
 
@@ -248,8 +249,7 @@ class GMSAState:
         User Principal Name of the gMSA
         """
         # sAMAccountName should end with a '$'
-        princ = "{}@{}".format(
-                self.config['gMSA_sAMAccountName'], self.config['gMSA_domain'])
+        princ = f"{self.config['gMSA_sAMAccountName']}@{self.config['gMSA_domain']}"
         self.write_keytab(princ, kvno, enctypes)
         logging.info("Keytab entries for UPN %s have been updated successfully "
                      "(kvno = %d). Next update on %s",
@@ -262,7 +262,7 @@ class GMSAState:
         Service Principal Names of the gMSA
         """
         for spn in self.config.getlist('gMSA_servicePrincipalNames'):
-            princ = "{}@{}".format(spn, self.config['gMSA_domain'])
+            princ = f"{spn}@{self.config['gMSA_domain']}"
             self.write_keytab(princ, kvno, enctypes)
             logging.info("Keytab entries for SPN %s have been updated successfully "
                         "(kvno = %d). Next update on %s",
@@ -311,16 +311,18 @@ class GMSAState:
         # The cleartext password may contain invalid utf16 characters. We need to
         # replace these characters using Unicode replacement characters to be able
         # to use the password.
-        self.current_password = \
-                blob[current_password_offset:end_current_password_offset-2]\
-                        .decode('utf-16le', 'replace')\
-                        .encode('utf-8')
+        self.current_password = (
+            blob[current_password_offset : end_current_password_offset - 2]
+            .decode('utf-16le', 'replace')
+            .encode('utf-8')
+        )
 
         if previous_password_offset != 0:
-            self.previous_password = \
-                    blob[previous_password_offset:query_password_interval_offset-2]\
-                    .decode('utf-16le', 'replace')\
-                    .encode('utf-8')
+            self.previous_password = (
+                blob[previous_password_offset : query_password_interval_offset - 2]
+                .decode('utf-16le', 'replace')
+                .encode('utf-8')
+            )
 
         # Query password interval is a 64-bit unsigned integer containing a
         # length of time, in units of 10^(-7) seconds.
@@ -350,7 +352,7 @@ class GMSAState:
                 int(time.time() + unchanged_password_interval)).astimezone()
         logging.debug("unchanged_password_date: %s", self.unchanged_password_date)
 
-    def run_on_rotate_cmd(self, command: Optional[str]) -> None:
+    def run_on_rotate_cmd(self, command: str | None) -> None:
         """
         Execute the on rotate command if it exists
         """

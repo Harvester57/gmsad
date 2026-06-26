@@ -1,11 +1,12 @@
 import configparser
 import logging
 import ssl
-from typing import List, Any
+from typing import Any
 
 import ldap3
 
 from gmsad.utils import get_dc
+
 
 class LDAPConnection:
     server: ldap3.Server
@@ -28,11 +29,11 @@ class LDAPConnection:
         else:
             host = get_dc(self.config['gMSA_domain'])
         logging.debug("LDAP Server host to contact is %s", host)
-        
+
         auto_bind = ldap3.AUTO_BIND_NO_TLS
         # Auto bind explicitly set in the configuration
         if "ldap_auto_bind" in self.config:
-            auto_bind = self.config.get("ldap_auto_bind").upper()
+            auto_bind = self.config["ldap_auto_bind"].upper()
             # Allow to write 'AUTO_BIND_NONE' or just 'NONE'
             if not auto_bind.startswith("AUTO_BIND_"):
                 auto_bind = f"AUTO_BIND_{auto_bind}"
@@ -59,15 +60,20 @@ class LDAPConnection:
                 raise e
             logging.debug("Authenticated as ??? (WhoAmI extension is not supported by the ldap server)")
 
-    def get_gmsa_attributes(self, attributes: List[str]) -> Any:
+    def get_gmsa_attributes(self, attributes: list[str]) -> Any:
         """
         Retrieve the given <attributes> list of the gMSA account.
         :return a dict like object (see ldap3 documentation)
         """
-        ldap_filter = "(&(ObjectClass=msDS-GroupManagedServiceAccount)"\
-                      "(sAMAccountName=%s))" % self.config["gMSA_sAMAccountName"]
-        logging.debug("Execute ldap search query with filter \"%s\" "\
-                      "and retrieve attributes %s", ldap_filter, attributes)
+        ldap_filter = (
+            "(&(ObjectClass=msDS-GroupManagedServiceAccount)"
+            f"(sAMAccountName={self.config['gMSA_sAMAccountName']}))"
+        )
+        logging.debug(
+            'Execute ldap search query with filter "%s" and retrieve attributes %s',
+            ldap_filter,
+            attributes,
+        )
         success = self.connection.search(
                 self.server.info.other["rootDomainNamingContext"][0],
                 ldap_filter,
@@ -76,16 +82,19 @@ class LDAPConnection:
 
         if not success:
             raise ValueError(
-                    "Could not find gMSA account %s in LDAP" % self.config["gMSA_sAMAccountName"])
+                f"Could not find gMSA account {self.config['gMSA_sAMAccountName']} in LDAP"
+            )
         if len(self.connection.entries) == 1:
             return self.connection.entries[0]
         elif len(self.connection.entries) == 0:
             raise ValueError(
-                    "Could not find gMSA account %s in LDAP" % self.config["gMSA_sAMAccountName"])
+                f"Could not find gMSA account {self.config['gMSA_sAMAccountName']} in LDAP"
+            )
         else:
             raise ValueError(
-                    "This is not supposed to happen, found too many gMSA accounts named %s in LDAP"
-                    % self.config["gMSA_sAMAccountName"])
+                "This is not supposed to happen, found too many gMSA accounts "
+                f"named {self.config['gMSA_sAMAccountName']} in LDAP"
+            )
 
     def close(self) -> None:
         self.connection.unbind()

@@ -1,8 +1,8 @@
-import logging
-import time
-import struct
-from typing import Optional, Any, Tuple, BinaryIO, List
 import io
+import logging
+import struct
+import time
+from typing import Any, BinaryIO
 
 from gmsad.enctypes import ENCTYPES, MS_ENCTYPES_TO_RFC
 
@@ -27,7 +27,7 @@ class InvalidPrincipal(Exception):
     """ The principal syntax is invalid """
 
 
-def unpack(format: str, fd: BinaryIO, offset: int = 0) -> Tuple[Any, int]:
+def unpack(format: str, fd: BinaryIO, offset: int = 0) -> tuple[Any, int]:
     """
     Unpack from the stream <fd> according to the format string
     <format>.
@@ -56,7 +56,7 @@ def pack(format: str, fd: BinaryIO, value: Any) -> int:
     return s.size
 
 
-def unpack_counted_octet_string(fd: BinaryIO, offset: int = 0) -> Tuple[bytes, int]:
+def unpack_counted_octet_string(fd: BinaryIO, offset: int = 0) -> tuple[bytes, int]:
     """
     Unpack a `counted_octet_string` from the stream <fd>, which is
     a "length + value" struct.
@@ -90,7 +90,7 @@ class Keyblock:
         self.key = key
 
     @staticmethod
-    def from_stream(fd: BinaryIO) -> Tuple['Keyblock', int]:
+    def from_stream(fd: BinaryIO) -> tuple['Keyblock', int]:
         """
         Unserialize a Keyblock from the stream <fd>
         :return:the number of bytes read
@@ -117,7 +117,7 @@ class Keyblock:
 
 class KeytabEntry:
     realm: str
-    components: List[str]
+    components: list[str]
     name_type: int
     timestamp: int
     vno: int
@@ -132,7 +132,7 @@ class KeytabEntry:
         self.key = key
 
     @staticmethod
-    def from_stream(fd: BinaryIO) -> Tuple['KeytabEntry', int]:
+    def from_stream(fd: BinaryIO) -> tuple['KeytabEntry', int]:
         """
         Unserialize keytab entry from fd and populates
         the current class instance with values stored in keytab.
@@ -143,7 +143,7 @@ class KeytabEntry:
             # Size indicates the number of bytes that follow in the entry
             size, _ = unpack('!i', fd)
         except struct.error:
-            raise EndOfKeytabEntries()
+            raise EndOfKeytabEntries() from None
 
         if size < 0:
             raise EmptyKeytabEntry(size)
@@ -183,7 +183,7 @@ class KeytabEntry:
             # Read missing bytes
             fd.read(size - offset)
 
-        princ = '/'.join(components) + '@' + realm
+        princ = f"{'/'.join(components)}@{realm}"
         entry = KeytabEntry(princ, vno, timestamp, key)
 
         # Total read size is the size of the "size" field (!i) added to its value
@@ -219,26 +219,30 @@ class KeytabEntry:
         return struct.calcsize('!i') + count
 
     def __repr__(self) -> str:
-        res = f"KeytabEntry {{\n" \
-              f"\trealm: {self.realm}\n" \
-              f"\tcomponents: \n"
+        res = (
+            f"KeytabEntry {{\n"
+            f"\trealm: {self.realm}\n"
+            f"\tcomponents: \n"
+        )
         for component in self.components:
             res += f"\t\t- {component}\n"
 
-        res += f"\tname_type: {self.name_type}\n" \
-               f"\ttimestamp: {self.timestamp}\n" \
-               f"\tvno: {self.vno}\n" \
-               f"\tkey: {self.key!r}\n" \
-               f"}}\n"
+        res += (
+            f"\tname_type: {self.name_type}\n"
+            f"\ttimestamp: {self.timestamp}\n"
+            f"\tvno: {self.vno}\n"
+            f"\tkey: {self.key!r}\n"
+            f"}}\n"
+        )
         return res
 
     @property
     def principal(self) -> str:
-        return '/'.join(self.components) + '@' + self.realm
+        return f"{'/'.join(self.components)}@{self.realm}"
 
     @principal.setter
     def principal(self, princ: str) -> None:
-        if not '@' in princ:
+        if '@' not in princ:
             raise InvalidPrincipal()
         princ, self.realm = princ.split('@')
         self.components = princ.split('/')
@@ -250,7 +254,7 @@ class Keytab:
     described in
     https://www.gnu.org/software/shishi/manual/html_node/The-Keytab-Binary-File-Format.html
     """
-    entries: List[KeytabEntry]
+    entries: list[KeytabEntry]
 
     def __init__(self) -> None:
         self.entries = []
@@ -300,7 +304,7 @@ class Keytab:
         """
         Serialize keytab content into <fd> stream
         """
-        offset = pack('!H', fd, KEYTAB_FILE_FORMAT_MAGIC)
+        pack('!H', fd, KEYTAB_FILE_FORMAT_MAGIC)
         for entry in self.entries:
             entry.to_stream(fd )
 

@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
 import argparse
-import sys
-import logging
-import getpass
 import binascii
+import getpass
+import logging
+import sys
 
-from gmsad.enctypes import aes256_cts_hmac_sha1_96_string_to_key, aes128_cts_hmac_sha1_96_string_to_key
+from gmsad.enctypes import (
+    aes128_cts_hmac_sha1_96_string_to_key,
+    aes256_cts_hmac_sha1_96_string_to_key,
+)
 from gmsad.salt import get_salt_from_preauth
 from gmsad.utils import get_dc
 
@@ -26,12 +29,14 @@ def __main__():
 
     if args.verbose:
         logging.basicConfig(level="DEBUG")
-    
+
     if args.password:
         password = args.password
     elif args.password_hex:
-        password = binascii.unhexlify(args.password_hex)\
+        password = (
+            binascii.unhexlify(args.password_hex)
             .decode('utf-16le', 'replace')
+        )
     else:
         password = getpass.getpass()
 

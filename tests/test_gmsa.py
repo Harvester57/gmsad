@@ -1,7 +1,7 @@
-import unittest
 import configparser
 import struct
 import time
+import unittest
 from datetime import datetime
 
 from gmsad.gmsa import GMSAState
@@ -51,7 +51,7 @@ class TestGMSA(unittest.TestCase):
                 self.gmsa_state.parse_managedpassword_blob(blob)
 
     def test_managed_password_invalid_length(self):
-        blob = SAMPLE_BLOB[0:len(SAMPLE_BLOB)-1]
+        blob = SAMPLE_BLOB[:-1]
 
         with self.assertLogs(level="ERROR"):
             with self.assertRaises(ValueError):
@@ -81,7 +81,7 @@ class TestGMSA(unittest.TestCase):
 
         self.assertEqual(
             self.gmsa_state.previous_password,
-            bytes())
+            b'')
 
     def test_managed_password_current_previous(self):
         self.gmsa_state.parse_managedpassword_blob(SAMPLE_BLOB_2)

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from gmsad.keytab import Keytab, KeytabEntry, Keyblock
-from gmsad.enctypes import RFC_AES128_CTS_HMAC_SHA1_96, RFC_AES256_CTS_HMAC_SHA1_96
 import argparse
-import sys
 import logging
+import sys
+
+from gmsad.enctypes import RFC_AES128_CTS_HMAC_SHA1_96, RFC_AES256_CTS_HMAC_SHA1_96
+from gmsad.keytab import Keyblock, Keytab, KeytabEntry
 
 
 def __main__():

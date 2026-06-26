@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gmsad"
+version = "0.2.0"
+description = "Linux service to manage gMSA accounts"
+readme = "README.md"
+authors = [
+    { name = "Vincent Ruello", email = "vincent.ruello@cea.fr" }
+]
+license = { text = "GPL-3.0-or-later" }
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: POSIX :: Linux",
+]
+dependencies = [
+    "ldap3",
+    "gssapi",
+    "dnspython",
+    "pycryptodomex",
+    "asn1crypto",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy",
+    "ruff",
+]
+
+[project.scripts]
+gmsad = "gmsad.bin.gmsad:main"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*"]
+
+[tool.mypy]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_return_any = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "ldap3.*",
+    "asn1crypto.*",
+    "gssapi.*",
+    "Cryptodome.*"
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade (upgrades syntax to modern Python)
+]
+ignore = ["E501"]

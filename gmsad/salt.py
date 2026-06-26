@@ -19,15 +19,22 @@ Useful documentation:
 - [MS-KILE]: Microsoft "Kerberos Network Authentication Service V5 Extensions"
 """
 
-import struct
 import random
 import socket
-from typing import Any as AnyType
+import struct
 from enum import IntEnum
+from typing import cast
 
-from asn1crypto.core import Sequence, SequenceOf, Integer, BitString, OctetString, GeneralString, \
-    GeneralizedTime, Any
-
+from asn1crypto.core import (
+    Any,
+    BitString,
+    GeneralizedTime,
+    GeneralString,
+    Integer,
+    OctetString,
+    Sequence,
+    SequenceOf,
+)
 
 APPLICATION_TAG = 1
 AS_REQ_TAG_NUMBER = 10
@@ -276,7 +283,7 @@ class ETYPE_INFO2(SequenceOf):
     _child_spec = ETYPE_INFO2_ENTRY
 
 
-def build_as_req(username: str, domain: str) -> AnyType:
+def build_as_req(username: str, domain: str) -> bytes:
     as_req = KRB_AS_REQ()
     as_req['pvno'] = 5
     as_req['msg-type'] = AS_MSG_TYPE
@@ -315,7 +322,7 @@ def build_as_req(username: str, domain: str) -> AnyType:
 
     as_req['req-body'] = req_body
 
-    return as_req.dump()
+    return cast(bytes, as_req.dump())
 
 
 def send_as_req(dc: str, username: str, domain: str, udp: bool = False) -> bytes:
@@ -367,7 +374,7 @@ def get_salt_from_rep(kdc_rep: bytes) -> str:
                         or pa_etype_info2_value['etype'].native == AES128_CTS_HMAC_SHA1_96_ENC_TYPE):
                         # XXX: Adding str just for mypy
                         return str(pa_etype_info2_value['salt'])
-    raise Exception("Could not retrieve salt from AS_REP (tag number %d)" % tag)
+    raise Exception(f"Could not retrieve salt from AS_REP (tag number {tag})")
 
 
 def get_salt_from_preauth(dc: str, username: str, domain: str) -> str:

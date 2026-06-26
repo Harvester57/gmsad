@@ -18,7 +18,7 @@ def load_config(filename: str) -> configparser.ConfigParser:
             converters={'list': lambda x: [i.strip() for i in x.split(',')]}
     )
     try:
-        with open(filename, "r") as fd:
+        with open(filename, encoding="utf-8") as fd:
             config.read_file(fd)
     except FileNotFoundError as e:
         logging.critical("Config file %s does not exist: %s", filename, e)

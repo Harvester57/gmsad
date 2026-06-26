@@ -7,7 +7,6 @@ import typing
 from Cryptodome.Cipher import AES
 from Cryptodome.Protocol import KDF
 
-
 # Constants retrieved from examples of annexe A.1 in RFC 3961
 #      128-fold("kerberos") =
 #               6b657262 65726f73 7b9b5b2b 93132b93

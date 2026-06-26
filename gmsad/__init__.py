@@ -2,9 +2,10 @@ import configparser
 import logging
 import traceback
 
-from gmsad.utils import every
 from gmsad.gmsa import GMSAState
 from gmsad.keytab import Keytab
+from gmsad.utils import every
+
 
 def run(config: configparser.ConfigParser) -> int:
     state = init_state(config)
@@ -34,7 +35,7 @@ def init_state(config: configparser.ConfigParser) -> dict:
         if section == 'gmsad':
             continue
         keytab_path = config[section]['gMSA_keytab']
-        if not keytab_path in keytabs:
+        if keytab_path not in keytabs:
             keytab = Keytab()
             keytab.open(keytab_path)
             keytabs[keytab_path] = keytab

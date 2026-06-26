@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-from gmsad.keytab import Keytab
-import textwrap
 import argparse
 import sys
+import textwrap
+
+from gmsad.keytab import Keytab
 
 enctypes = {
     1: "des-cbc-crc (weak)",

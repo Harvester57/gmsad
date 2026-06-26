@@ -1,9 +1,9 @@
 import argparse
 import logging
 
+from gmsad import run
 from gmsad.config import load_config
 from gmsad.utils import configure_logging
-from gmsad import run
 
 DEFAULT_CONFIG = "/etc/gmsad.conf"
 DEFAULT_LOGLEVEL = "INFO"
