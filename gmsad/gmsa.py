@@ -269,6 +269,34 @@ class GMSAState:
                         princ, kvno, self.unchanged_password_date.isoformat())
         self.run_on_rotate_cmd(self.config.get('on_spn_rotate_cmd', fallback=None))
 
+    def _extract_wchar_string(self, blob: bytes, start_offset: int, end_offset: int) -> bytes:
+        """
+        Extract a null-terminated WCHAR string from blob between start_offset and end_offset.
+        Splits at the first 2-byte null terminator aligned to WCHAR boundaries.
+        """
+        if start_offset >= end_offset or start_offset < 0 or end_offset > len(blob):
+            return b""
+        raw_data = blob[start_offset:end_offset]
+        for i in range(0, len(raw_data) - 1, 2):
+            if raw_data[i] == 0 and raw_data[i + 1] == 0:
+                return raw_data[:i]
+        return raw_data
+
+    def _safe_datetime_from_interval(self, interval: float) -> datetime:
+        """
+        Safely convert interval (seconds from now) to a datetime object.
+        Caps at year 9999 to prevent platform OverflowError / OSError.
+        """
+        try:
+            timestamp = time.time() + interval
+            # Cap at year 9999 (approx 253,402,300,799 seconds) to prevent platform-specific overflows
+            if timestamp > 253402300799:
+                timestamp = 253402300799
+            return datetime.fromtimestamp(int(timestamp)).astimezone()
+        except (OverflowError, OSError):
+            # Fallback to far future date
+            return datetime(9999, 12, 31, 23, 59, 59).astimezone()
+
     def parse_managedpassword_blob(self, blob: bytes) -> None:
         """
         Parse a MSDS-MANAGEDPASSWORD_BLOB and populate class attributes
@@ -299,6 +327,14 @@ class GMSAState:
         query_password_interval_offset = struct.unpack('<H', blob[12:14])[0]
         unchanged_password_interval_offset = struct.unpack('<H', blob[14:16])[0]
 
+        # Basic bounds checking of offsets
+        if (current_password_offset < 16 or current_password_offset > len(blob) or
+            previous_password_offset > len(blob) or
+            query_password_interval_offset < 16 or query_password_interval_offset + 8 > len(blob) or
+            unchanged_password_interval_offset < 16 or unchanged_password_interval_offset + 8 > len(blob)):
+            logging.error("MSDS-MANAGEDPASSWORD_BLOB offset fields are out of bounds.")
+            raise ValueError("MSDS-MANAGEDPASSWORD_BLOB offset fields are out of bounds.")
+
         # Previous password is not always present, and in that case its offset is 0
         # (according to MS doc)
         end_current_password_offset = (
@@ -307,19 +343,18 @@ class GMSAState:
                 else previous_password_offset)
 
         # Current password is a null-terminated WCHAR string containing the cleartext
-        # current password of the account. We discard the 2 ending zeros of UTF16 encoding.
-        # The cleartext password may contain invalid utf16 characters. We need to
-        # replace these characters using Unicode replacement characters to be able
-        # to use the password.
+        # current password of the account. We decode from UTF-16LE and encode to UTF-8.
+        # WCHAR strings can have trailing alignment padding; _extract_wchar_string safely
+        # strips any null-terminators and skips the padding.
         self.current_password = (
-            blob[current_password_offset : end_current_password_offset - 2]
+            self._extract_wchar_string(blob, current_password_offset, end_current_password_offset)
             .decode('utf-16le', 'replace')
             .encode('utf-8')
         )
 
         if previous_password_offset != 0:
             self.previous_password = (
-                blob[previous_password_offset : query_password_interval_offset - 2]
+                self._extract_wchar_string(blob, previous_password_offset, query_password_interval_offset)
                 .decode('utf-16le', 'replace')
                 .encode('utf-8')
             )
@@ -344,12 +379,10 @@ class GMSAState:
         logging.debug("query_password_interval = %f", query_password_interval)
         logging.debug("unchanged_password_interval= %f", unchanged_password_interval)
 
-        self.query_password_date = datetime.fromtimestamp(
-                int(time.time() + query_password_interval)).astimezone()
+        self.query_password_date = self._safe_datetime_from_interval(query_password_interval)
         logging.debug("query_password_time: %s", self.query_password_date)
 
-        self.unchanged_password_date = datetime.fromtimestamp(
-                int(time.time() + unchanged_password_interval)).astimezone()
+        self.unchanged_password_date = self._safe_datetime_from_interval(unchanged_password_interval)
         logging.debug("unchanged_password_date: %s", self.unchanged_password_date)
 
     def run_on_rotate_cmd(self, command: str | None) -> None:

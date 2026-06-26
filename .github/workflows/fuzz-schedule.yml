@@ -10,6 +10,15 @@ on:
 jobs:
   fuzz:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: keytab
+            path: tests/corpus
+            command: python tests/fuzz_keytab.py -max_total_time=600 -dict=tests/keytab.dict tests/corpus
+          - target: gmsa
+            path: tests/corpus_gmsa
+            command: python tests/fuzz_gmsa.py -max_total_time=600 tests/corpus_gmsa
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -35,15 +44,14 @@ jobs:
       - name: Restore fuzz corpus cache
         uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
         with:
-          path: tests/corpus
+          path: ${{ matrix.path }}
           # Unique key for each run, so cache is always saved at the end
-          key: fuzz-corpus-${{ runner.os }}-${{ github.run_id }}
+          key: fuzz-corpus-${{ matrix.target }}-${{ runner.os }}-${{ github.run_id }}
           # Fallback to the most recent cache from a previous run
           restore-keys: |
-            fuzz-corpus-${{ runner.os }}-
+            fuzz-corpus-${{ matrix.target }}-${{ runner.os }}-
 
       - name: Run fuzzing session
         run: |
-          mkdir -p tests/corpus
-          # Run the fuzzer for up to 10 minutes (600 seconds) to discover deep issues
-          python tests/fuzz_keytab.py -max_total_time=600 -dict=tests/keytab.dict tests/corpus
+          mkdir -p ${{ matrix.path }}
+          ${{ matrix.command }}
