@@ -28,3 +28,12 @@ int32_negative="\x80\x00\x00\x00"
 enctype_aes128="\x00\x11"
 enctype_aes256="\x00\x12"
 enctype_rc4="\x00\x17"
+
+# Fuzzer recommended tokens (discovered during 500,000 iterations)
+rec_ff_ff="\xff\xff"
+rec_01_00="\x01\x00"
+rec_33_00_00_00_00_00_00_00="\x33\x00\x00\x00\x00\x00\x00\x00"
+rec_01_00_00_00_00_00_21_11="\x01\x00\x00\x00\x00\x00\x21\x11"
+rec_02_01_00_00_00_00_00_00="\x02\x01\x00\x00\x00\x00\x00\x00"
+rec_00_00_00_00_00_00_f8_08="\x00\x00\x00\x00\x00\x00\xf8\x08"
+rec_00_00_00_00_00_00_05_02="\x00\x00\x00\x00\x00\x00\x05\x02"

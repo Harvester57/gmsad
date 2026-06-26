@@ -45,5 +45,5 @@ jobs:
       - name: Run fuzzing session
         run: |
           mkdir -p tests/corpus
-          # Run the fuzzer for up to 500,000 iterations to discover deep issues
-          python tests/fuzz_keytab.py -runs=500000 -dict=tests/keytab.dict tests/corpus
+          # Run the fuzzer for up to 10 minutes (600 seconds) to discover deep issues
+          python tests/fuzz_keytab.py -max_total_time=600 -dict=tests/keytab.dict tests/corpus
