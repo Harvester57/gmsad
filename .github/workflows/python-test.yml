@@ -50,9 +50,12 @@ jobs:
           python -m pytest --cov=gmsad tests/ -v
 
       - name: Run fuzz harness regression check
+        # This serves as a short smoke test (not for bug hunting) to ensure the fuzz 
+        # target harness code itself is not broken by refactoring or updates.
         run: |
           mkdir -p tests/corpus tests/corpus_gmsa
           python tests/fuzz_keytab.py -runs=5000 -max_len=512 -dict=tests/keytab.dict tests/corpus
           python tests/fuzz_gmsa.py -runs=5000 -max_len=2048 -dict=tests/gmsa.dict tests/corpus_gmsa
+
 
 
