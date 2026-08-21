@@ -1,5 +1,5 @@
 # Stage 1: Build stage
-FROM python:3.14-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6 AS builder
+FROM python:3.14-slim@sha256:ce40764625a4ff50df3548277632e7f96c4e77fe75fa848aae9885476e7df5a4 AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -16,7 +16,7 @@ COPY gmsad/ ./gmsad/
 RUN pip wheel --no-cache-dir --wheel-dir /build/wheels .
 
 # Stage 2: Runtime stage
-FROM python:3.14-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6
+FROM python:3.14-slim@sha256:ce40764625a4ff50df3548277632e7f96c4e77fe75fa848aae9885476e7df5a4
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libkrb5-3 \
