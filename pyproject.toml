@@ -21,7 +21,7 @@ dependencies = [
     "ldap3",
     "gssapi",
     "dnspython",
-    "pycryptodomex",
+    "cryptography",
     "asn1crypto",
 ]
 
@@ -56,7 +56,7 @@ module = [
     "ldap3.*",
     "asn1crypto.*",
     "gssapi.*",
-    "Cryptodome.*",
+    "cryptography.*",
     "atheris.*",
     "atheris",
     "hypothesis.*",
